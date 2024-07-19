@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sneaker Data Feed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f4f4f4;
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: white;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+        }
+        input[type="text"], input[type="number"], input[type="date"], button {
+            padding: 10px;
+            margin-top: 10px;
+            margin-right: 5px;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Sneaker Data Feed</h1>
+    <form id="search-form">
+        <input type="text" id="search-input" placeholder="Search sneakers...">
+        <input type="number" id="min-price" placeholder="Min price">
+        <input type="number" id="max-price" placeholder="Max price">
+        <input type="date" id="release-date" placeholder="Release date">
+        <button type="submit">Search</button>
+    </form>
+    <ul id="sneaker-list">
+        <!-- Sneaker items will be dynamically added here -->
+    </ul>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('sneakerData', (products) => {
+            const list = document.getElementById('sneaker-list');
+            list.innerHTML = ''; // Clear the list before adding new entries
+            if (!products || products.length === 0) {
+                list.innerHTML = '<li>No sneakers found.</li>';
+                return;
+            }
+            products.forEach(product => {
+                const item = document.createElement('li');
+                item.textContent = `${product.shoeName} - ${product.retailPrice}`;
+                list.appendChild(item);
+            });
+        });
+
+        document.getElementById('search-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting traditionally
+            const searchTerm = document.getElementById('search-input').value;
+            const minPrice = document.getElementById('min-price').value;
+            const maxPrice = document.getElementById('max-price').value;
+            const releaseDate = document.getElementById('release-date').value;
+            socket.emit('search', {
+                query: searchTerm, 
+                minPrice: minPrice, 
+                maxPrice: maxPrice, 
+                releaseDate: releaseDate
+            });
+        });
+    </script>
+</body>
+</html>
